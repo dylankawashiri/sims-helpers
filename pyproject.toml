@@ -1,0 +1,28 @@
+[build-system]
+requires = ["setuptools >= 65.5.0", "setuptools-scm>=8.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "simshelpers"
+description = "Tools for simulations"
+readme = "README.md"
+license = {text = "proprietary"}
+requires-python = ">=3.10"
+urls = {source = 'https://github.com/dylankawashiri/pynlo'}
+dynamic = ["version"]
+
+dependencies = [
+    "numpy",
+    "pandas",
+    "matplotlib",
+    "ruff",
+    "scipy",
+    "tqdm",
+    "pyyaml",
+]
+
+[tool.setuptools_scm]
+version_file = "src/simshelpers/_version.py"
+
+[tool.jupytext]
+formats = "ipynb,py:percent"
