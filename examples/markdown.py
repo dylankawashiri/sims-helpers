@@ -7,4 +7,4 @@ if __name__ == "__main__":
     sample_dict = {"Header 1": [1,2,3,4,5], "Header 2": [6,7,8,9,10]}
     md.add_divider()
     md.add_table(sample_dict)
-    md.save()
+    text = md.save(return_text=True)

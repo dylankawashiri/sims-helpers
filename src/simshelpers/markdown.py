@@ -16,13 +16,17 @@ class Markdown:
         self.text_options["p"] = ""
 
 
-    def save(self):
+    def save(self, return_text: bool = False):
         """Save markdown file."""
         if self.contents:
+            text = ""
             with open(self.save_path, "w") as f:
                 for line in self.contents:
                     f.write(line)
+                    text += line
             print(f"Markdown file saved to: {self.save_path}")
+            if return_text:
+                return text
         else:
             raise RuntimeError("Content of markdown file is empty!")
 
