@@ -71,3 +71,4 @@ typings/
 __pycache__/
 .venv/
 src/simshelpers/_version.py
+.env
