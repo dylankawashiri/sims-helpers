@@ -60,43 +60,52 @@ class Database:
         self.execute(f"CREATE DATABASE IF NOT EXISTS {db}")
 
       # should redo with tuples
-    def create_new_table(self, table_name: str, *, table: dict[Any, Any] | pd.DataFrame, del_if_exists: bool = True):
+    def create_new_table(self, table_name: str, *, table: dict[Any, Any] | pd.DataFrame, del_if_exists: bool = True, use_pandas: bool = False):
         if del_if_exists:
             self.execute(f"DROP TABLE IF EXISTS {table_name}")
+        if use_pandas:
+            table_copy = table.copy()
         if type(table) is pd.DataFrame:
-            table = table.to_dict(orient="list")
-        type_dict: dict[Any, str | None] = {k: None for k in table.keys()}
-        for item in table:
-            if isinstance(table[item], (Sequence, Iterable)):
-                if isinstance(table[item], np.ndarray):
-                    table[item] = table[item].tolist()
-                to_check = next((x for x in table[item] if x is not None), None)
-            else:
-                to_check = table[item]
-            if to_check is None:
-                type_dict[item] = "TEXT"
-            elif isinstance(to_check, float):
-                type_dict[item] = "FLOAT"
-            elif isinstance(to_check, int):
-                type_dict[item] = "INT"
-            elif type(to_check) is bool:
-                type_dict[item] = "BOOL"
-            elif type(to_check) is str:
-                type_dict[item] = "TEXT"
-            else:
-                raise TypeError(f"Not a supported type: {type(to_check)}")
-        msg = f"CREATE TABLE {table_name} (\n"
+            table = table.to_dict(orient="list").copy()
 
-        len_dict = len(type_dict.keys())
+        if table_name not in self.list_tables():
+            type_dict: dict[Any, str | None] = {k: None for k in table.keys()}
+            for item in table:
+                if isinstance(table[item], (Sequence, Iterable)):
+                    if isinstance(table[item], np.ndarray):
+                        table[item] = table[item].tolist()
+                    to_check = next((x for x in table[item] if x is not None), None)
+                else:
+                    to_check = table[item]
+                if to_check is None:
+                    type_dict[item] = "TEXT"
+                elif isinstance(to_check, float):
+                    type_dict[item] = "FLOAT"
+                elif isinstance(to_check, int):
+                    type_dict[item] = "INT"
+                elif type(to_check) is bool:
+                    type_dict[item] = "BOOL"
+                elif type(to_check) is str:
+                    type_dict[item] = "TEXT"
+                else:
+                    raise TypeError(f"Not a supported type: {type(to_check)}")
+            msg = f"CREATE TABLE {table_name} (\n"
 
-        for idx, key in enumerate(type_dict):
-            msg += f"{key}   {type_dict[key]}"
-            if idx < len_dict - 1:
-                msg += ",\n"
-            else:
-                msg += ")"
-        self.execute(msg)
-        self.add_to_table(table_name, table=table)
+            len_dict = len(type_dict.keys())
+
+            for idx, key in enumerate(type_dict):
+                msg += f"{key}   {type_dict[key]}"
+                if idx < len_dict - 1:
+                    msg += ",\n"
+                else:
+                    msg += ")"
+            self.execute(msg)
+        if use_pandas:
+            if not isinstance(table, pd.DataFrame):
+                table_copy = pd.DataFrame(table_copy)
+            table_copy.to_sql(name=table_name, con=self.conn, if_exists="append")
+        else:
+            self.add_to_table(table_name, table=table)
 
     def add_to_table(self, table_name: str, *, table: dict[Any, Any] | pd.DataFrame):
         max_len = len(table[max(table, key=lambda k: len(table[k]))])
